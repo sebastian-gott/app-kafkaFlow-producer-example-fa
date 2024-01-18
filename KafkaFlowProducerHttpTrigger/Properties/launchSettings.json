@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "KafkaFlowProducerHttpTrigger": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7005"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+      "httpPort": 34005,
+      "useSSL": false
+    }
+  }
+}
