@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Hosting;
 using KafkaFlow;
 using KafkaFlow.Serializer;
+using KafkaFlow.Configuration;
 
 namespace KafkaFlowProducerHttpTrigger
 {
@@ -8,8 +9,14 @@ namespace KafkaFlowProducerHttpTrigger
     {
         static void Main(string[] args)
         {
-            const string topicName = "Order";
-            const string producerName = "CustomerOrderProducer";
+            const string topicName = "ConnectionTest";
+            const string producerName = "ConnectionTestConsumer";
+            Action<SecurityInformation> sasl = securityInfo =>
+            {
+                securityInfo.SaslMechanism = SaslMechanism.Plain;
+                securityInfo.SaslUsername = "your_username";
+                securityInfo.SaslPassword = "your_password";
+            };
 
             var host = new HostBuilder()
             .ConfigureFunctionsWorkerDefaults()
@@ -20,9 +27,10 @@ namespace KafkaFlowProducerHttpTrigger
                         .UseConsoleLog()
                         .AddCluster(
                             cluster => cluster
+                                .WithSecurityInformation(sasl)
                                 .WithBrokers(new[]
                                 {
-                                    "kafka.confluent.svc.cluster.local:9071"
+                                    "localhost:6969"
                                 })
                                 .CreateTopicIfNotExists(topicName, 1, 1)
                                 .AddProducer(
