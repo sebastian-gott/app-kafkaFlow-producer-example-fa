@@ -9,7 +9,7 @@ namespace KafkaFlowProducerHttpTrigger
     {
         static void Main(string[] args)
         {
-            const string topicName = "ConnectionTest";
+            const string topicName = "TopicName";
             const string producerName = "ConnectionTestConsumer";
             Action<SecurityInformation> sasl = securityInfo =>
             {
@@ -27,7 +27,12 @@ namespace KafkaFlowProducerHttpTrigger
                         .UseConsoleLog()
                         .AddCluster(
                             cluster => cluster
-                                .WithSecurityInformation(sasl)
+                                .WithSecurityInformation(security => {
+                                    security.SaslMechanism = SaslMechanism.Plain;
+                                    security.SaslUsername = "username";
+                                    security.SaslPassword = "password";
+                                    security.SecurityProtocol = SecurityProtocol.SaslPlaintext;
+                                })
                                 .WithBrokers(new[]
                                 {
                                     "localhost:6969"

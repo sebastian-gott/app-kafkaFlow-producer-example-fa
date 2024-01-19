@@ -23,13 +23,13 @@ namespace KafkaFlowProducerHttpTrigger
         }
 
         [Function("KafkaFlowProduceCustomerOrder")]
-        public async Task<HttpResponseData> ProduceOrder([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "trigger/CustomerOrder/")] HttpRequestData req)
+        public async Task<HttpResponseData> ProduceOrder([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "trigger/TestMessage/")] HttpRequestData req)
         {
             try
             {
-                _logger.LogInformation("Function: {functionApp} processed a request", "KafkaFlowProduceCustomerOrder");
+                _logger.LogInformation("Function: {functionApp} processed a request", "KafkaFlowProduceTestMessage");
 
-                ValidationWrapper<Order> httpResponseBody = await req.GetBody<Order>();
+                ValidationWrapper<TestMessage> httpResponseBody = await req.GetBody<TestMessage>();
 
                 if (!httpResponseBody.IsValid)
                 {
@@ -43,13 +43,13 @@ namespace KafkaFlowProducerHttpTrigger
                     return response;
                 }
 
-                await CreateOrder(httpResponseBody.Value);
-                _logger.LogInformation("{type} processed successfully", "Order");
+                await CreateTestMessage(httpResponseBody.Value);
+                _logger.LogInformation("{type} processed successfully", "TestMessage");
                 return req.CreateResponse(HttpStatusCode.OK);
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error occurred while processing the request: exception", ex);
+                _logger.LogError("An error occurred while processing the request: {exception}", ex);
 
                 var response = req.CreateResponse(HttpStatusCode.InternalServerError);
                 await response.WriteStringAsync($"An error occurred while processing the request: {ex}");
@@ -58,59 +58,13 @@ namespace KafkaFlowProducerHttpTrigger
             }
         }
 
-        [Function("KafkaFlowProduceAccountTransaction")]
-        public async Task<HttpResponseData> ProduceTransaction(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "trigger/AccountTransaction/")] HttpRequestData req)
-        {
-            try
-            {
-                _logger.LogInformation("Function: {functionApp} processed a request", "KafkaFlowProduceAccountTransaction");
-
-                ValidationWrapper<Transaction> httpResponseBody = await req.GetBody<Transaction>();
-
-                if (!httpResponseBody.IsValid)
-                {
-                    var validationResults = httpResponseBody.ValidationResults.Select(s => s.ErrorMessage).ToArray();
-
-                    _logger.LogWarning("Some parameters are missing or are invalid: {validationResults}", (object)validationResults);
-
-                    var response = req.CreateResponse(HttpStatusCode.BadRequest);
-                    await response.WriteStringAsync($"Some parameters are missing or are invalid: {string.Join(", ", validationResults)}");
-
-                    return response;
-                }
-
-                await CreateTransaction(httpResponseBody.Value);
-                _logger.LogInformation("{type} processed successfully", "transaction");
-                return req.CreateResponse(HttpStatusCode.OK);
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("An error occurred while processing the request: exception", ex);
-
-                var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-                await response.WriteStringAsync($"An error occurred while processing the request: {ex}");
-
-                return response;
-            }
-        }
-
-        public async Task CreateOrder(Order message) =>
+        public async Task CreateTestMessage(TestMessage message) =>
             await _producer["CustomerOrderProducer"]
                 .ProduceAsync(
-                    "Order",
+                    "TopicName",
                     Guid.NewGuid().ToString(),
                     message,
-                    headers: new MessageHeaders(new Conf.Headers { new Conf.Header("messageType", Encoding.UTF8.GetBytes("Order")) }
-                ));
-        public async Task CreateTransaction(Transaction message) =>
-            await _producer["CustomerOrderProducer"]
-                .ProduceAsync(
-                    "Account-topic",
-                    Guid.NewGuid().ToString(),
-                    message,
-                    headers: new MessageHeaders(new Conf.Headers { new Conf.Header("messageType", Encoding.UTF8.GetBytes("Transaction")) }
+                    headers: new MessageHeaders(new Conf.Headers { new Conf.Header("messageType", Encoding.UTF8.GetBytes("TestMessage")) }
                 ));
     }
 }
